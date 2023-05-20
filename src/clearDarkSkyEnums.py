@@ -27,10 +27,10 @@ class Transparency(Enum):
             return Transparency.TRANSPARENT
         elif 'Above Average' in text:
             return Transparency.ABOVE_AVERAGE
-        elif 'Average' in text:
-            return Transparency.AVERAGE
         elif 'Below Average' in text:
             return Transparency.BELOW_AVERAGE
+        elif 'Average' in text:
+            return Transparency.AVERAGE
         elif 'Poor' in text:
             return Transparency.POOR
         # Default to poor

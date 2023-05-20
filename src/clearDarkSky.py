@@ -358,7 +358,7 @@ class AlertProfile:
         Returns:
             bool: True if the transparency matches the alert profile, False otherwise.
         """
-        return hour.data[Attribute.TRANSPARENCY] <= self.__transparency
+        return hour.data[Attribute.TRANSPARENCY].value  <= self.__transparency.value 
 
     def __checkForSeeing(self, hour):
         """ Check if the seeing matches the alert profile.
