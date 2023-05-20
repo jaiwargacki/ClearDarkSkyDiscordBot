@@ -156,14 +156,14 @@ class PointInTime:
     
     def __str__(self):
         """ Return a string representation of the point in time. """
+        return f'{self.timestamp} with {len(self.data)} attributes'
+
+    def __repr__(self):
+        """ Return a string representation of the point in time. """
         output = f'{self.timestamp}\n'
         for attribute in self.data:
             output += f'{attribute}: {self.data[attribute]}\n'
         return output
-
-    def __repr__(self):
-        """ Return a string representation of the point in time. """
-        return self.__str__()
 
     def add(self, attribute, text):
         """ Add a weather attribute and its value to the point in time.
