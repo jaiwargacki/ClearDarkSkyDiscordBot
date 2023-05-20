@@ -1,6 +1,7 @@
 import re
 import datetime
 import time
+import math
 
 import requests
 from bs4 import BeautifulSoup
@@ -71,44 +72,65 @@ def textToValue(attribute, text):
                 return 0
             elif 'Overcast' in text:
                 return 100
-            return int(text.split('%')[0])
+            try:
+                return int(text.split('%')[0])
+            except:
+                return 100
         # Transparency is an enum
         case WeatherAttribute.TRANSPARENCY:
             return Transparency.getAttributeFromText(text)
         # Seeing is a float (x/5)
         case WeatherAttribute.SEEING:
-            return float(REGEX_INT.search(text).group(0))/5
+            try:
+                return float(REGEX_INT.search(text).group(0))/5
+            except:
+                return 1/5
         # Darkness is a float (-4 to 6.5)
         case WeatherAttribute.DARKNESS:
-            return float(REGEX_DECIMAL.search(text).group(0))
+            try:
+                return float(REGEX_DECIMAL.search(text).group(0))
+            except:
+                return -4
         # Smoke is an int (0 to 500 ug/m^3)
         case WeatherAttribute.SMOKE:
-            if 'Smoke' in text:
+            if 'No Smoke' in text:
                 return 0
-            return int(REGEX_INT.search(text).group(0))
+            try:
+                return int(REGEX_INT.search(text).group(0))
+            except:
+                return 500
         # Wind is a tuple of ints (0 to 45 mph)
         case WeatherAttribute.WIND:
-            first = int(REGEX_INT.search(text).group(0))
-            if first == 45:
-                return (first, math.inf)
-            second = int(REGEX_INT.findall(text)[1])
-            return (first, second)
+            try:
+                first = int(REGEX_INT.search(text).group(0))
+                if first == 45:
+                    return (first, math.inf)
+                second = int(REGEX_INT.findall(text)[1])
+                return (first, second)
+            except:
+                return (45, math.inf)
         # Humidity is a tuple of ints (0 to 100%)
         case WeatherAttribute.HUMIDITY:
-            first = int(REGEX_INT.search(text).group(0))
-            if text[0] == '<':
-                return (0, first)
-            second = int(REGEX_INT.findall(text)[1])
-            return (first, second)
+            try:
+                first = int(REGEX_INT.search(text).group(0))
+                if text[0] == '<':
+                    return (0, first)
+                second = int(REGEX_INT.findall(text)[1])
+                return (first, second)
+            except:
+                return (95, 100)
         # Temperature is a tuple of ints (-40 to 113 F)
         case WeatherAttribute.TEMPERATURE:
-            first = int(REGEX_INT_NEG.search(text).group(0))
-            if text[0] == '<':
-                return (-math.inf, first)
-            if first == 113:
-                return (first, math.inf)
-            second = int(REGEX_INT_NEG.findall(text)[1])
-            return (first, second)
+            try:
+                first = int(REGEX_INT_NEG.search(text).group(0))
+                if text[0] == '<':
+                    return (-math.inf, first)
+                if first == 113:
+                    return (first, math.inf)
+                second = int(REGEX_INT_NEG.findall(text)[1])
+                return (first, second)
+            except:
+                return (113, math.inf)
 
 
 class PointInTime:
