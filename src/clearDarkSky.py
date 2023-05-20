@@ -82,9 +82,11 @@ def textToValue(attribute, text):
         # Seeing is a float (x/5)
         case WeatherAttribute.SEEING:
             try:
+                if 'Too cloudy to forecast' in text:
+                    return 0.0
                 return float(REGEX_INT.search(text).group(0))/5
             except:
-                return 1/5
+                return 0.0
         # Darkness is a float (-4 to 6.5)
         case WeatherAttribute.DARKNESS:
             try:
@@ -278,7 +280,7 @@ class AlertProfile:
         self.__cloudCoverage = 100
         self.__transparency = Transparency.POOR
         self.__seeing = 0.0
-        self.__darkness = -4.0
+        self.__darkness = -math.inf
         self.__smoke = 500
         self.__wind = math.inf
         self.__humidity = 100
@@ -364,14 +366,17 @@ class AlertProfile:
         """
         self.__duration = shortestDuration
 
-    def checkForCloudCoverage(self, hour):
+    def __checkForCloudCoverage(self, hour):
         """ Check if the cloud coverage matches the alert profile.
         Parameters:
             hour (PointInTime): The hour to check.
         Returns:
             bool: True if the cloud coverage matches the alert profile, False otherwise.
         """
-        return hour.data[Attribute.CLOUD_COVERAGE] <= self.__cloudCoverage
+        try:
+            return hour.data[WeatherAttribute.CLOUD_COVER] <= self.__cloudCoverage
+        except KeyError:
+            return True
 
     def __checkForTransparency(self, hour):
         """ Check if the transparency matches the alert profile.
@@ -380,7 +385,10 @@ class AlertProfile:
         Returns:
             bool: True if the transparency matches the alert profile, False otherwise.
         """
-        return hour.data[Attribute.TRANSPARENCY].value  <= self.__transparency.value 
+        try:
+            return hour.data[WeatherAttribute.TRANSPARENCY].value  <= self.__transparency.value 
+        except KeyError:
+            return True
 
     def __checkForSeeing(self, hour):
         """ Check if the seeing matches the alert profile.
@@ -389,7 +397,10 @@ class AlertProfile:
         Returns:
             bool: True if the seeing matches the alert profile, False otherwise.
         """
-        return hour.data[Attribute.SEEING] >= self.__seeing
+        try:
+            return hour.data[WeatherAttribute.SEEING] >= self.__seeing
+        except KeyError:
+            return True
 
     def __checkForDarkness(self, hour):
         """ Check if the darkness matches the alert profile.
@@ -398,7 +409,13 @@ class AlertProfile:
         Returns:
             bool: True if the darkness matches the alert profile, False otherwise.
         """
-        return hour.data[Attribute.DARKNESS] >= self.__darkness
+        try:
+            for darkness in hour.data[WeatherAttribute.DARKNESS]:
+                if darkness >= self.__darkness:
+                    return True
+            return False
+        except KeyError:
+            return True
 
     def __checkForSmoke(self, hour):
         """ Check if the smoke matches the alert profile.
@@ -407,7 +424,10 @@ class AlertProfile:
         Returns:
             bool: True if the smoke matches the alert profile, False otherwise.
         """
-        return hour.data[Attribute.SMOKE] <= self.__smoke
+        try:
+            return hour.data[WeatherAttribute.SMOKE] <= self.__smoke
+        except KeyError:
+            return True
 
     def __checkForWind(self, hour):
         """ Check if the wind matches the alert profile.
@@ -416,7 +436,10 @@ class AlertProfile:
         Returns:
             bool: True if the wind matches the alert profile, False otherwise.
         """
-        return min(hour.data[Attribute.WIND]) <= self.__wind
+        try:
+            return min(hour.data[WeatherAttribute.WIND]) <= self.__wind
+        except KeyError:
+            return True
 
     def __checkForHumidity(self, hour):
         """ Check if the humidity matches the alert profile.
@@ -425,7 +448,10 @@ class AlertProfile:
         Returns:
             bool: True if the humidity matches the alert profile, False otherwise.
         """
-        return min(hour.data[Attribute.HUMIDITY]) <= self.__humidity
+        try:
+            return min(hour.data[WeatherAttribute.HUMIDITY]) <= self.__humidity
+        except KeyError:
+            return True
 
     def __checkForTemperature(self, hour):
         """ Check if the temperature matches the alert profile.
@@ -434,7 +460,10 @@ class AlertProfile:
         Returns:
             bool: True if the temperature matches the alert profile, False otherwise.
         """
-        return min(hour.data[Attribute.TEMPERATURE]) <= self.__temperatureMax and max(hour.data[Attribute.TEMPERATURE]) >= self.__temperatureMin
+        try:
+            return min(hour.data[WeatherAttribute.TEMPERATURE]) <= self.__temperatureMax and max(hour.data[WeatherAttribute.TEMPERATURE]) >= self.__temperatureMin
+        except KeyError:
+            return True
 
     def __checkHour(self, hour):
         """ Check if the hour matches the alert profile.
@@ -453,28 +482,35 @@ class AlertProfile:
                         self.__checkForTemperature(hour)]
         return all(conditions)
 
-    def checkForAlert(location, weatherData):
+    def checkForAlert(self, location, weatherData):
         """ Check if the weather data matches the alert profile.
         Parameters:
-            weatherData (PointInTime): The weather data to check.
+            weatherData (dictionary): A dictionary of PointInTime objects.
         Returns:
             list: A list of tuples datetime.datetime objects representing 
                 the start and end of the matching conditions.
         """
-        if location != weatherData.location:
+        if location != self.location:
             return None
         matches = []
         matching_num = 0
-        for h in range(0, len(weatherData.data)):
-            hour = weatherData.data[h]
-            if self.__checkHour(hour):
+        start = None
+        for h in range(0, len(weatherData)):
+            key = list(weatherData.keys())[h]
+            hour = weatherData[key]
+            isValid = self.__checkHour(hour)
+            if isValid:
                 matching_num += 1
                 if matching_num == 1:
                     start = hour.timestamp
-            elif matching_num >= self.__duration:
-                end = weatherData.data[h-1].timestamp
+            if not isValid and matching_num >= self.__duration:
+                key = list(weatherData.keys())[h-1]
+                end = weatherData[key].timestamp
                 matches.append((start, end))
                 matching_num = 0
+            if h == len(weatherData) - 1 and matching_num >= self.__duration:
+                end = weatherData[key].timestamp
+                matches.append((start, end))
         return matches
 
 def main():
@@ -484,8 +520,9 @@ def main():
     # Get data
     data = extractWeatherData(locationKey)
 
-    for clock_time in data:
-        print(data[clock_time])
+    # Set up alert profile
+    alertProfile = AlertProfile('jai', 'Testing', locationKey)
+    print(alertProfile.checkForAlert(locationKey, data))
 
 
 if __name__ == '__main__':

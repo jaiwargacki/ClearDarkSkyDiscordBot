@@ -23,11 +23,14 @@ class TestTextToValue:
         assert clearDarkSky.textToValue(clearDarkSky.WeatherAttribute.TRANSPARENCY, 'Below Average (00Z+49hr)') == clearDarkSky.Transparency.BELOW_AVERAGE
 
     # Seeing
+    def test_textToValue_Seeing_ToCloudy(self):
+        assert clearDarkSky.textToValue(clearDarkSky.WeatherAttribute.SEEING, 'Too cloudy to forecast (00Z+57hr)') == 0
+
     def test_textToValue_Seeing_Valid(self):
         assert clearDarkSky.textToValue(clearDarkSky.WeatherAttribute.SEEING, 'Average 3/5 (00Z+57hr)') == 3/5
 
     def test_textToValue_Seeing_Invalid(self):
-        assert clearDarkSky.textToValue(clearDarkSky.WeatherAttribute.SEEING, 'foo') == 1/5
+        assert clearDarkSky.textToValue(clearDarkSky.WeatherAttribute.SEEING, 'foo') == 0
 
     # Darkness
     def test_textToValue_Darkness_Valid_Neg(self):
