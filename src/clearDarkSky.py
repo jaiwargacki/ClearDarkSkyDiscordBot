@@ -209,6 +209,252 @@ def extractWeatherData(location):
     return data
 
 
+class AlertProfile:
+    """ An alert profile for a user.
+    Attributes:
+        username (str): The username of the alert profile.
+        name (str): The name of the alert profile.
+        location (str): The location key of the alert profile.
+        cloudCoverage (int): The maximum cloud coverage (0 to 100%).
+        transparency (Transparency): The minimum transparency.
+        seeing (float): The minimum seeing (n/5).
+        darkness (float): The minimum darkness.
+        smoke (int): The maximum smoke (0 to 500).
+        wind (int): The maximum wind (0 to 45+ mph).
+        humidity (int): The maximum humidity (0 to 100%).
+        temperatureMax (int): The maximum temperature (-40 to 113 F).
+        temperatureMin (int): The minimum temperature (-40 to 113 F).
+        duration (int): The minimum duration in hours.
+    Methods:
+        __init__(self, username, name, location): Initialize the alert profile with a username and name.
+        __str__(self): Return a string representation of the alert profile.
+        __repr__(self): Return a string representation of the alert profile.
+        setCloudCoverage(self, worstCloudCoverage): Set the maximum cloud coverage.
+        setTransparency(self, worstTransparency): Set the minimum transparency.
+        setSeeing(self, worstSeeing): Set the minimum seeing.
+        setDarkness(self, worstDarkness): Set the minimum darkness.
+        setSmoke(self, worstSmoke): Set the maximum smoke.
+        setWind(self, worstWind): Set the maximum wind.
+        setHumidity(self, worstHumidity): Set the maximum humidity.
+        setTemperatureMax(self, worstTemperatureMax): Set the maximum temperature.
+        setTemperatureMin(self, worstTemperatureMin): Set the minimum temperature.
+        setDuration(self, duration): Set the minimum duration.
+        checkForAlert(location, weatherData): Check if the weather data is acceptable.
+    """
+    
+    def __init__(self, username, name, location):
+        """ Initialize the alert profile with a username and name.
+        Parameters:
+            username (str): The username of the alert profile.
+            name (str): The name of the alert profile.
+        """
+        self.username = username
+        self.name = name
+        self.location = location
+
+        # Set default values
+        self.__cloudCoverage = 100
+        self.__transparency = Transparency.POOR
+        self.__seeing = 0.0
+        self.__darkness = -4.0
+        self.__smoke = 500
+        self.__wind = math.inf
+        self.__humidity = 100
+        self.__temperatureMax = math.inf
+        self.__temperatureMin = -math.inf
+        self.__duration = 0
+
+    def __str__(self):
+        """ Return a string representation of the alert profile. """
+        return f'{self.name} by {self.username}'
+
+    def __repr__(self):
+        """ Return a string representation of the alert profile. """
+        return self.__str__()
+
+    def setCloudCoverage(self, worstCloudCoverage):
+        """ Set the worst cloud coverage for the alert profile.
+        Parameters:
+            worstCloudCoverage (int): The worst cloud coverage for the alert profile.
+        """
+        self.__cloudCoverage = worstCloudCoverage
+
+    def setTransparency(self, worstTransparency):
+        """ Set the worst transparency for the alert profile.
+        Parameters:
+            worstTransparency (Transparency): The worst transparency for the alert profile.
+        """
+        self.__transparency = worstTransparency
+
+    def setSeeing(self, worstSeeing):
+        """ Set the worst seeing for the alert profile.
+        Parameters:
+            worstSeeing (float): The worst seeing for the alert profile.
+        """
+        self.__seeing = worstSeeing
+
+    def setDarkness(self, worstDarkness):
+        """ Set the worst darkness for the alert profile.
+        Parameters:
+            worstDarkness (float): The worst darkness for the alert profile.
+        """
+        self.__darkness = worstDarkness
+
+    def setSmoke(self, worstSmoke):
+        """ Set the worst smoke for the alert profile.
+        Parameters:
+            worstSmoke (int): The worst smoke for the alert profile.
+        """
+        self.__smoke = worstSmoke
+    
+    def setWind(self, worstWind):
+        """ Set the worst wind for the alert profile.
+        Parameters:
+            worstWind (int): The worst wind for the alert profile.
+        """
+        self.__wind = worstWind
+
+    def setHumidity(self, worstHumidity):
+        """ Set the worst humidity for the alert profile.
+        Parameters:
+            worstHumidity (int): The worst humidity for the alert profile.
+        """
+        self.__humidity = worstHumidity
+
+    def setTemperatureMax(self, worstTemperatureMax):
+        """ Set the worst maximum temperature for the alert profile.
+        Parameters:
+            worstTemperatureMax (int): The worst maximum temperature for the alert profile.
+        """
+        self.__temperatureMax = worstTemperatureMax
+
+    def setTemperatureMin(self, worstTemperatureMin):
+        """ Set the worst minimum temperature for the alert profile.
+        Parameters:
+            worstTemperatureMin (int): The worst minimum temperature for the alert profile.
+        """
+        self.__temperatureMin = worstTemperatureMin
+
+    def setDuration(self, shortestDuration):
+        """ Set the shortest duration for the alert profile.
+        Parameters:
+            shortestDuration (int): The shortest duration for the alert profile.
+        """
+        self.__duration = shortestDuration
+
+    def checkForCloudCoverage(self, hour):
+        """ Check if the cloud coverage matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the cloud coverage matches the alert profile, False otherwise.
+        """
+        return hour.data[Attribute.CLOUD_COVERAGE] <= self.__cloudCoverage
+
+    def __checkForTransparency(self, hour):
+        """ Check if the transparency matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the transparency matches the alert profile, False otherwise.
+        """
+        return hour.data[Attribute.TRANSPARENCY] <= self.__transparency
+
+    def __checkForSeeing(self, hour):
+        """ Check if the seeing matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the seeing matches the alert profile, False otherwise.
+        """
+        return hour.data[Attribute.SEEING] >= self.__seeing
+
+    def __checkForDarkness(self, hour):
+        """ Check if the darkness matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the darkness matches the alert profile, False otherwise.
+        """
+        return hour.data[Attribute.DARKNESS] >= self.__darkness
+
+    def __checkForSmoke(self, hour):
+        """ Check if the smoke matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the smoke matches the alert profile, False otherwise.
+        """
+        return hour.data[Attribute.SMOKE] <= self.__smoke
+
+    def __checkForWind(self, hour):
+        """ Check if the wind matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the wind matches the alert profile, False otherwise.
+        """
+        return min(hour.data[Attribute.WIND]) <= self.__wind
+
+    def __checkForHumidity(self, hour):
+        """ Check if the humidity matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the humidity matches the alert profile, False otherwise.
+        """
+        return min(hour.data[Attribute.HUMIDITY]) <= self.__humidity
+
+    def __checkForTemperature(self, hour):
+        """ Check if the temperature matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the temperature matches the alert profile, False otherwise.
+        """
+        return min(hour.data[Attribute.TEMPERATURE]) <= self.__temperatureMax and max(hour.data[Attribute.TEMPERATURE]) >= self.__temperatureMin
+
+    def __checkHour(self, hour):
+        """ Check if the hour matches the alert profile.
+        Parameters:
+            hour (PointInTime): The hour to check.
+        Returns:
+            bool: True if the hour matches the alert profile, False otherwise.
+        """
+        conditions = [self.__checkForCloudCoverage(hour),
+                        self.__checkForTransparency(hour),
+                        self.__checkForSeeing(hour),
+                        self.__checkForDarkness(hour),
+                        self.__checkForSmoke(hour),
+                        self.__checkForWind(hour),
+                        self.__checkForHumidity(hour),
+                        self.__checkForTemperature(hour)]
+        return all(conditions)
+
+    def checkForAlert(location, weatherData):
+        """ Check if the weather data matches the alert profile.
+        Parameters:
+            weatherData (PointInTime): The weather data to check.
+        Returns:
+            list: A list of tuples datetime.datetime objects representing 
+                the start and end of the matching conditions.
+        """
+        if location != weatherData.location:
+            return None
+        matches = []
+        matching_num = 0
+        for h in range(0, len(weatherData.data)):
+            hour = weatherData.data[h]
+            if self.__checkHour(hour):
+                matching_num += 1
+                if matching_num == 1:
+                    start = hour.timestamp
+            elif matching_num >= self.__duration:
+                end = weatherData.data[h-1].timestamp
+                matches.append((start, end))
+                matching_num = 0
+        return matches
+
 def main():
     # Set url
     locationKey = 'AlbanyNYkey'
