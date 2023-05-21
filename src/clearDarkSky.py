@@ -2,6 +2,7 @@ import re
 import datetime
 import time
 import math
+import json
 
 import requests
 from bs4 import BeautifulSoup
@@ -236,6 +237,7 @@ def extractWeatherData(location):
 class AlertProfile:
     """ An alert profile for a user. """
 
+    LOCATION = 'LOCATION'
     DURATION = 'DURATION'
     
     def __init__(self, username, name, location):
@@ -243,11 +245,12 @@ class AlertProfile:
         Parameters:
             username (str): The username of the alert profile.
             name (str): The name of the alert profile.
+            location (str): The location key of the alert profile.
         """
         self.username = username
         self.name = name
-        self.__location = location
         self.__attributes = dict()
+        self.__attributes[AlertProfile.LOCATION] = location
         self.__attributes[AlertProfile.DURATION] = 0
 
     def __str__(self):
@@ -263,7 +266,7 @@ class AlertProfile:
         Parameters:
             duration (int): The duration of the alert profile.
         """
-        self.__attributes[DURATION] = duration
+        self.__attributes[AlertProfile.DURATION] = duration
 
     def add(self, attribute, value):
         """ Add an attribute to the alert profile.
@@ -271,14 +274,14 @@ class AlertProfile:
             attribute (WeatherAttribute): The attribute to add.
             value (int, float, enum or tuple): The value of the attribute.
         """
-        self.__attributes[attribute] = value
+        self.__attributes[str(attribute)] = value
 
     def remove(self, attribute):
         """ Remove an attribute from the alert profile.
         Parameters:
             attribute (WeatherAttribute): The attribute to remove.
         """
-        del self.__attributes[attribute]
+        del self.__attributes[str(attribute)]
 
     def get(self, attribute):
         """ Get the value of an attribute.
@@ -287,7 +290,7 @@ class AlertProfile:
         Returns:
             int, float, enum or tuple: The value of the attribute.
         """
-        return self.__attributes[attribute]
+        return self.__attributes[str(attribute)]
 
     def __checkForCloudCoverage(self, hour):
         """ Check if the cloud coverage matches the alert profile.
@@ -407,7 +410,7 @@ class AlertProfile:
                         self.__checkForTemperature(hour)]
         return all(conditions)
 
-    def checkForAlert(self, location, weatherData):
+    def checkForAlert(self, weatherData):
         """ Check if the weather data matches the alert profile.
         Parameters:
             weatherData (dictionary): A dictionary of PointInTime objects.
@@ -415,8 +418,6 @@ class AlertProfile:
             list: A list of tuples datetime.datetime objects representing 
                 the start and end of the matching conditions.
         """
-        if location != self.__location:
-            return None
         matches = []
         matching_num = 0
         start = None
@@ -438,6 +439,20 @@ class AlertProfile:
                 matches.append((start, end))
         return matches
 
+    def __getFilename(self):
+        """ Get the filename for the alert profile. """
+        return 'AlertProfiles/' +self.username + '-' + self.name + '.json'
+
+    def save(self):
+        """ Save the alert profile to file. """
+        with open(self.__getFilename(), 'w') as f:
+            json.dump(self.__attributes, f)
+
+    def load(self):
+        """ Load the alert profile from file. """
+        with open(self.__getFilename(), 'r') as f:
+            self.__attributes = json.load(f)
+
 def main():
     # Set url
     locationKey = 'AlbanyNY'
@@ -447,7 +462,15 @@ def main():
 
     # Set up alert profile
     alertProfile = AlertProfile('jai', 'Testing', locationKey)
-    print(alertProfile.checkForAlert(locationKey, data))
+    alertProfile.add(WeatherAttribute.CLOUD_COVER, 50)
+    alertProfile.setDuration(2)
+    print(alertProfile.checkForAlert(data))
+
+    alertProfile.save()
+
+    alertProfileLoaded = AlertProfile('jai', 'Testing', locationKey)
+    alertProfileLoaded.load()
+    print(alertProfileLoaded.checkForAlert(data))
 
 
 if __name__ == '__main__':
