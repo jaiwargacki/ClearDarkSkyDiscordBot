@@ -137,6 +137,20 @@ def textToValue(attribute, text):
                 return (113, math.inf)
 
 
+def validateLocationKey(location):
+    """ Validate the location key.
+    Parameters:
+        location (str): The location key to validate.
+    Returns:
+        bool: True if the location key is valid, False otherwise.
+    """
+    url = BASE_URL % location
+    page = requests.get(url)
+    if page.status_code == 404:
+        return False
+    return True
+
+
 def extractWeatherData(location):
     """ Extract weather data from website html.
     Parameters:
