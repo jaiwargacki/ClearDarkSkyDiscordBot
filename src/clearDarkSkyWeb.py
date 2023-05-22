@@ -146,7 +146,7 @@ def validateLocationKey(location):
     """
     url = BASE_URL % location
     page = requests.get(url)
-    if page.status_code == 404:
+    if page.status_code != 200:
         return False
     return True
 
