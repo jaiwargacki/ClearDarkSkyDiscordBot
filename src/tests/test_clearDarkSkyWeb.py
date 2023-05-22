@@ -87,3 +87,10 @@ class TestTextToValue:
 
     def test_textToValue_Temperature_Invalid(self):
         assert clearDarkSkyWeb.textToValue(clearDarkSkyWeb.WeatherAttribute.TEMPERATURE, 'foo') == (113, math.inf)
+
+class TestValidateLocationKey:
+    def test_validateLocationKey_Valid(self):
+        assert clearDarkSkyWeb.validateLocationKey('AlbanyNY')
+
+    def test_validateLocationKey_Invalid(self):
+        assert not clearDarkSkyWeb.validateLocationKey('foo')
