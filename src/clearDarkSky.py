@@ -3,6 +3,7 @@ import datetime
 import time
 import math
 import json
+import os
 
 import requests
 from bs4 import BeautifulSoup
@@ -64,7 +65,7 @@ class AlertProfile:
     LOCATION = 'LOCATION'
     DURATION = 'DURATION'
     
-    def __init__(self, username, name, location):
+    def __init__(self, username, name, location='0'):
         """ Initialize the alert profile with a username and name.
         Parameters:
             username (str): The username of the alert profile.
@@ -265,14 +266,43 @@ class AlertProfile:
 
     def __getFilename(self):
         """ Get the filename for the alert profile. """
-        return 'AlertProfiles/' +self.username + '-' + self.name + '.json'
+        return 'AlertProfiles/' + str(self.username) + '-' + self.name + '.json'
 
     def save(self):
         """ Save the alert profile to file. """
         with open(self.__getFilename(), 'w') as f:
             json.dump(self.__attributes, f)
 
+    def delete(self):
+        """ Delete the alert profile from file. """
+        try:
+            if os.path.exists(self.__getFilename()):
+                os.remove(self.__getFilename())
+                return True
+            else:
+                return False
+        except:
+            return False
+        
+
     def load(self):
         """ Load the alert profile from file. """
         with open(self.__getFilename(), 'r') as f:
             self.__attributes = json.load(f)
+
+    @staticmethod
+    def getAll(username):    
+        """ Get all alert profiles for a user.
+        Parameters:
+            username (string): The username of the user.
+        Returns:
+            list: A list of AlertProfile objects.
+        """
+        username = str(username)
+        profiles = []
+        for filename in os.listdir('AlertProfiles'):
+            if filename.startswith(username):
+                profile = AlertProfile(username, filename.split('-')[1].split('.')[0])
+                profile.load()
+                profiles.append(profile)
+        return profiles

@@ -18,8 +18,11 @@ class TestTransparency:
     def test_getAttributeFromText_Poor(self):
         assert clearDarkSkyEnums.Transparency.getAttributeFromText('Poor') == clearDarkSkyEnums.Transparency.POOR
 
+    def test_getAttributeFromText_TooCloudy(self):
+        assert clearDarkSkyEnums.Transparency.getAttributeFromText('Too Cloudy') == clearDarkSkyEnums.Transparency.TOO_CLOUDY
+
     def test_getAttributeFromText_Invalid(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('foo') == clearDarkSkyEnums.Transparency.POOR
+        assert clearDarkSkyEnums.Transparency.getAttributeFromText('foo') == clearDarkSkyEnums.Transparency.TOO_CLOUDY
 
     def test_confirmRanking(self):
         assert clearDarkSkyEnums.Transparency.TRANSPARENT.value < clearDarkSkyEnums.Transparency.ABOVE_AVERAGE.value
