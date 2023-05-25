@@ -46,6 +46,24 @@ REGEX_INT = re.compile(r'\d+')
 REGEX_INT_NEG = re.compile(r'-?\d+')
 REGEX_DECIMAL = re.compile(r'-?\d+\.\d+')
 
+def validateLocationKey(location):
+    """ Validate the location key. Attempts up to 5 times.
+    Parameters:
+        location (str): The location key to validate.
+    Returns:
+        bool: True if the location key is valid, False otherwise.
+    """
+    url = BASE_URL % location
+    attemps = 0
+    while True:
+        page = requests.get(url)
+        if page.status_code == 200:
+            return True
+        elif attemps == 5:
+            return False
+        attemps += 1
+        time.sleep(2)
+
 
 def extractDate(soup):
     """ Extract the date of generation from website html. 
@@ -54,9 +72,12 @@ def extractDate(soup):
     Returns:
         datetime.datetime: The date of generation (0 hours, 0 min).
     """
-    date_content = soup.find(lambda tag: tag.name == FONT_LABEL and LAST_UPDATE_TEXT in tag.text)
-    regex_date = REGEX_INT.findall(date_content.text)
-    return datetime.datetime(int(regex_date[0]), int(regex_date[1]), int(regex_date[2]))
+    try:
+        date_content = soup.find(lambda tag: tag.name == FONT_LABEL and LAST_UPDATE_TEXT in tag.text)
+        regex_date = REGEX_INT.findall(date_content.text)
+        return datetime.datetime(int(regex_date[0]), int(regex_date[1]), int(regex_date[2]))
+    except:
+        return datetime.datetime(1970, 1, 1)
 
 
 def textToValue(attribute, text):
@@ -137,20 +158,6 @@ def textToValue(attribute, text):
                 return (113, math.inf)
 
 
-def validateLocationKey(location):
-    """ Validate the location key.
-    Parameters:
-        location (str): The location key to validate.
-    Returns:
-        bool: True if the location key is valid, False otherwise.
-    """
-    url = BASE_URL % location
-    page = requests.get(url)
-    if page.status_code != 200:
-        return False
-    return True
-
-
 def extractWeatherData(location):
     """ Extract weather data from website html.
     Parameters:
@@ -175,9 +182,7 @@ def extractWeatherData(location):
         except:
             tries += 1
             if tries == 5:
-                print(ERROR_EXITING)
                 return None
-            print(ERROR_TRY_AGAIN)
             time.sleep(2)
 
     data = dict()
