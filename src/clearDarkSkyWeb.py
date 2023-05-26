@@ -59,7 +59,7 @@ def validateLocationKey(location):
         page = requests.get(url)
         if page.status_code == 200:
             return True
-        elif attemps == 5:
+        elif attemps == 20:
             return False
         attemps += 1
         time.sleep(2)
@@ -181,7 +181,7 @@ def extractWeatherData(location):
             break
         except:
             tries += 1
-            if tries == 5:
+            if tries == 20:
                 return None
             time.sleep(2)
 
