@@ -62,6 +62,8 @@ class PointInTime:
 class AlertProfile:
     """ An alert profile for a user. """
 
+    DIRECTORY = 'AlertProfiles'
+
     LOCATION = 'LOCATION'
     DURATION = 'DURATION'
     
@@ -72,7 +74,7 @@ class AlertProfile:
             name (str): The name of the alert profile.
             location (str): The location key of the alert profile.
         """
-        self.username = username
+        self.username = str(username)
         self.name = name
         self.__attributes = dict()
         self.__attributes[AlertProfile.LOCATION] = location
@@ -84,7 +86,10 @@ class AlertProfile:
 
     def __repr__(self):
         """ Return a string representation of the alert profile. """
-        return self.__str__()
+        response = f'{self.name} by {self.username}\n'
+        for attribute in self.__attributes:
+            response += f'{attribute}: {self.__attributes[attribute]}\n'
+        return response
 
     def setDuration(self, duration):
         """ Set the duration of the alert profile.
@@ -115,7 +120,10 @@ class AlertProfile:
         Returns:
             int, float, enum or tuple: The value of the attribute.
         """
-        return self.__attributes[str(attribute)]
+        try:
+            return self.__attributes[str(attribute)]
+        except KeyError:
+            return None
 
     def __checkForCloudCoverage(self, hour):
         """ Check if the cloud coverage matches the alert profile.
@@ -126,7 +134,7 @@ class AlertProfile:
         """
         try:
             return hour.data[WeatherAttribute.CLOUD_COVER] <= self.get(WeatherAttribute.CLOUD_COVER)
-        except KeyError:
+        except:
             return True
 
     def __checkForTransparency(self, hour):
@@ -138,7 +146,7 @@ class AlertProfile:
         """
         try:
             return hour.data[WeatherAttribute.TRANSPARENCY].value  <= self.get(WeatherAttribute.TRANSPARENCY).value
-        except KeyError:
+        except:
             return True
 
     def __checkForSeeing(self, hour):
@@ -150,7 +158,7 @@ class AlertProfile:
         """
         try:
             return hour.data[WeatherAttribute.SEEING] >= self.get(WeatherAttribute.SEEING)
-        except KeyError:
+        except:
             return True
 
     def __checkForDarkness(self, hour):
@@ -165,7 +173,7 @@ class AlertProfile:
                 if darkness >= self.get(WeatherAttribute.DARKNESS):
                     return True
             return False
-        except KeyError:
+        except:
             return True
 
     def __checkForSmoke(self, hour):
@@ -177,7 +185,7 @@ class AlertProfile:
         """
         try:
             return hour.data[WeatherAttribute.SMOKE] <= self.get(WeatherAttribute.SMOKE)
-        except KeyError:
+        except:
             return True
 
     def __checkForWind(self, hour):
@@ -189,7 +197,7 @@ class AlertProfile:
         """
         try:
             return min(hour.data[WeatherAttribute.WIND]) <= self.get(WeatherAttribute.WIND)
-        except KeyError:
+        except:
             return True
 
     def __checkForHumidity(self, hour):
@@ -201,7 +209,7 @@ class AlertProfile:
         """
         try:
             return min(hour.data[WeatherAttribute.HUMIDITY]) <= self.get(WeatherAttribute.HUMIDITY)
-        except KeyError:
+        except:
             return True
 
     def __checkForTemperature(self, hour):
@@ -212,10 +220,10 @@ class AlertProfile:
             bool: True if the temperature matches the alert profile, False otherwise.
         """
         try:
-            min_pass = min(hour.data[WeatherAttribute.TEMPERATURE]) <= min(self.get(WeatherAttribute.TEMPERATURE))
-            max_pass = max(hour.data[WeatherAttribute.TEMPERATURE]) >= max(self.get(WeatherAttribute.TEMPERATURE))
+            min_pass = min(hour.data[WeatherAttribute.TEMPERATURE]) >= min(self.get(WeatherAttribute.TEMPERATURE))
+            max_pass = max(hour.data[WeatherAttribute.TEMPERATURE]) <= max(self.get(WeatherAttribute.TEMPERATURE))
             return min_pass and max_pass
-        except KeyError:
+        except:
             return True
 
     def __checkHour(self, hour):
@@ -266,10 +274,12 @@ class AlertProfile:
 
     def __getFilename(self):
         """ Get the filename for the alert profile. """
-        return 'AlertProfiles/' + str(self.username) + '-' + self.name + '.json'
+        return AlertProfile.DIRECTORY + '/' + self.username + '-' + self.name + '.json'
 
     def save(self):
         """ Save the alert profile to file. """
+        if not os.path.exists(AlertProfile.DIRECTORY):
+            os.makedirs(AlertProfile.DIRECTORY)
         with open(self.__getFilename(), 'w') as f:
             json.dump(self.__attributes, f)
 
@@ -279,11 +289,9 @@ class AlertProfile:
             if os.path.exists(self.__getFilename()):
                 os.remove(self.__getFilename())
                 return True
-            else:
-                return False
         except:
             return False
-        
+        return False
 
     def load(self):
         """ Load the alert profile from file. """
@@ -300,7 +308,7 @@ class AlertProfile:
         """
         username = str(username)
         profiles = []
-        for filename in os.listdir('AlertProfiles'):
+        for filename in os.listdir(AlertProfile.DIRECTORY):
             if filename.startswith(username):
                 profile = AlertProfile(username, filename.split('-')[1].split('.')[0])
                 profile.load()
