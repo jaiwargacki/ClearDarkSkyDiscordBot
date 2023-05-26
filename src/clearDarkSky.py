@@ -281,7 +281,12 @@ class AlertProfile:
         if not os.path.exists(AlertProfile.DIRECTORY):
             os.makedirs(AlertProfile.DIRECTORY)
         with open(self.__getFilename(), 'w') as f:
+            transparency = self.get(WeatherAttribute.TRANSPARENCY)
+            if transparency is not None:
+                self.add(WeatherAttribute.TRANSPARENCY, transparency.value)
             json.dump(self.__attributes, f)
+            if transparency is not None:
+                self.add(WeatherAttribute.TRANSPARENCY, transparency)
 
     def delete(self):
         """ Delete the alert profile from file. """
@@ -297,6 +302,9 @@ class AlertProfile:
         """ Load the alert profile from file. """
         with open(self.__getFilename(), 'r') as f:
             self.__attributes = json.load(f)
+            transparency = self.get(WeatherAttribute.TRANSPARENCY)
+            if transparency is not None:
+                self.add(WeatherAttribute.TRANSPARENCY, Transparency(transparency))
 
     @staticmethod
     def getAll(username):    

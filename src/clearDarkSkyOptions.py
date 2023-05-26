@@ -1,6 +1,17 @@
 import discord
 import clearDarkSkyEnums as cde
 
+ATTRIBUTE_OPTIONS = [
+    discord.SelectOption(label='Cloud Cover', value=cde.WeatherAttribute.CLOUD_COVER.value),
+    discord.SelectOption(label='Transparency', value=cde.WeatherAttribute.TRANSPARENCY.value),
+    discord.SelectOption(label='Seeing', value=cde.WeatherAttribute.SEEING.value),
+    discord.SelectOption(label='Darkness', value=cde.WeatherAttribute.DARKNESS.value),
+    discord.SelectOption(label='Smoke', value=cde.WeatherAttribute.SMOKE.value),
+    discord.SelectOption(label='Wind', value=cde.WeatherAttribute.WIND.value),
+    discord.SelectOption(label='Humidity', value=cde.WeatherAttribute.HUMIDITY.value),
+    discord.SelectOption(label='Temperature', value=cde.WeatherAttribute.TEMPERATURE.value),
+]
+
 CLOUD_COVER_OPTIONS = [
     discord.SelectOption(label='Clear', value='0'),
     discord.SelectOption(label='10% covered', value='10'),
@@ -16,12 +27,12 @@ CLOUD_COVER_OPTIONS = [
 ]
 
 TRANSPARENCY_OPTIONS = [
-    discord.SelectOption(label='Transparent', value=cde.Transparency.TRANSPARENT.value),
-    discord.SelectOption(label='Above Average', value=cde.Transparency.ABOVE_AVERAGE.value),
-    discord.SelectOption(label='Average', value=cde.Transparency.AVERAGE.value),
-    discord.SelectOption(label='Below Average', value=cde.Transparency.BELOW_AVERAGE.value),
-    discord.SelectOption(label='Poor', value=cde.Transparency.POOR.value),
-    discord.SelectOption(label='Too cloudy to forecast', value=cde.Transparency.TOO_CLOUDY.value)
+    discord.SelectOption(label='Transparent', value='Transparent'),
+    discord.SelectOption(label='Above Average', value='Above Average'),
+    discord.SelectOption(label='Average', value='Average'),
+    discord.SelectOption(label='Below Average', value='Below Average'),
+    discord.SelectOption(label='Poor', value='Poor'),
+    discord.SelectOption(label='Too cloudy to forecast', value='Too cloudy to forecast')
 ]
 
 SEEING_OPTIONS = [
@@ -51,7 +62,7 @@ DARKNESS_OPTIONS = [
     discord.SelectOption(label='-4.0', value='-4.0')
 ]
 
-SMOKES_OPTIONS = [
+SMOKE_OPTIONS = [
     discord.SelectOption(label='No Smoke', value='0.0'),
     discord.SelectOption(label='2 ug/m^3', value='2.0'),
     discord.SelectOption(label='5 ug/m^3', value='5.0'),
