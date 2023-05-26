@@ -46,168 +46,48 @@ async def _createAlertProfile(interaction, location: str, alert_profile_name: st
 
 
 # Update Alert Profile
-class UpdateCloudCover(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
+class UpdateAttribute(discord.ui.View):
+    def __init__(self, alert_profile_name: str, attributeKey: str):
         super().__init__()
         self.alert_profile_name = alert_profile_name
+        self.attribute = cds.WeatherAttribute(int(attributeKey))
+        if self.attribute == cds.WeatherAttribute.CLOUD_COVER:
+            select = discord.ui.Select(placeholder = "Maximum cloud cover", options = cdo.CLOUD_COVER_OPTIONS)
+        elif self.attribute == cds.WeatherAttribute.TRANSPARENCY:
+            select = discord.ui.Select(placeholder = "Worst transparency", options = cdo.TRANSPARENCY_OPTIONS)
+        elif self.attribute == cds.WeatherAttribute.SEEING:
+            select = discord.ui.Select(placeholder = "Worst seeing", options = cdo.SEEING_OPTIONS)
+        elif self.attribute == cds.WeatherAttribute.DARKNESS:
+            select = discord.ui.Select(placeholder = "Brightest", options = cdo.DARKNESS_OPTIONS)
+        elif self.attribute == cds.WeatherAttribute.SMOKE:
+            select = discord.ui.Select(placeholder = "Worst smoke", options = cdo.SMOKE_OPTIONS)
+        elif self.attribute == cds.WeatherAttribute.WIND:
+            select = discord.ui.Select(placeholder = "Worst wind", options = cdo.WIND_OPTIONS)
+        elif self.attribute == cds.WeatherAttribute.HUMIDITY:
+            select = discord.ui.Select(placeholder = "Worst humidity", options = cdo.HUMIDITY_OPTIONS)
+        elif self.attribute == cds.WeatherAttribute.TEMPERATURE:
+            select = discord.ui.Select(placeholder = "Temperature Min and Max", options = cdo.TEMPERATURE_OPTIONS)
+        select.callback = self.callback
+        self.add_item(select)
 
-    @discord.ui.select(
-        placeholder = "Maximium cloud cover",
-        options = cdo.CLOUD_COVER_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
+    async def callback(self, interaction):
         profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
         try:
             profile.load()
         except FileNotFoundError:
             await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
             return
-        profile.add(cds.WeatherAttribute.CLOUD_COVER, int(select.values[0]))
+        if self.attribute == cds.WeatherAttribute.CLOUD_COVER:
+            profile.add(cds.WeatherAttribute.CLOUD_COVER, int(interaction.data['values'][0]))
+        elif self.attribute == cds.WeatherAttribute.TRANSPARENCY:
+            profile.add(cds.WeatherAttribute.TRANSPARENCY, cds.Transparency.getAttributeFromText(interaction.data['values'][0]))
+        elif self.attribute in [cds.WeatherAttribute.SEEING, cds.WeatherAttribute.DARKNESS, cds.WeatherAttribute.SMOKE, cds.WeatherAttribute.WIND, cds.WeatherAttribute.HUMIDITY]:
+            profile.add(cds.WeatherAttribute.SEEING, float(interaction.data['values'][0]))
+        elif self.attribute == cds.WeatherAttribute.TEMPERATURE:
+            temps = [float(x) for x in interaction.data['values']]
+            profile.add(cds.WeatherAttribute.TEMPERATURE, (min(temps), max(temps)))
         profile.save()
-        await interaction.response.send_message("Successfully updated cloud cover!")
-
-class UpdateTransparency(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
-        super().__init__()
-        self.alert_profile_name = alert_profile_name
-
-    @discord.ui.select(
-        placeholder = "Worst transparency",
-        options = cdo.TRANSPARENCY_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
-        profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
-        try:
-            profile.load()
-        except FileNotFoundError:
-            await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
-            return
-        profile.add(cds.WeatherAttribute.TRANSPARENCY, cds.Transparency.getAttributeFromText(select.values[0]))
-        profile.save()
-        await interaction.response.send_message("Successfully updated transparency!")
-
-class UpdateSeeing(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
-        super().__init__()
-        self.alert_profile_name = alert_profile_name
-
-    @discord.ui.select(
-        placeholder = "Worst seeing",
-        options = cdo.SEEING_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
-        profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
-        try:
-            profile.load()
-        except FileNotFoundError:
-            await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
-            return
-        profile.add(cds.WeatherAttribute.SEEING, float(select.values[0]))
-        profile.save()
-        await interaction.response.send_message("Successfully updated seeing!")
-
-class UpdateDarkness(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
-        super().__init__()
-        self.alert_profile_name = alert_profile_name
-
-    @discord.ui.select(
-        placeholder = "Brightest",
-        options = cdo.DARKNESS_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
-        profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
-        try:
-            profile.load()
-        except FileNotFoundError:
-            await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
-            return
-        profile.add(cds.WeatherAttribute.DARKNESS, float(select.values[0]))
-        profile.save()
-        await interaction.response.send_message("Successfully updated darkness!")
-
-class UpdateSmoke(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
-        super().__init__()
-        self.alert_profile_name = alert_profile_name
-
-    @discord.ui.select(
-        placeholder = "Worst smoke",
-        options = cdo.SMOKE_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
-        profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
-        try:
-            profile.load()
-        except FileNotFoundError:
-            await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
-            return
-        profile.add(cds.WeatherAttribute.SMOKE, float(select.values[0]))
-        profile.save()
-        await interaction.response.send_message("Successfully updated smoke!")
-
-class UpdateWind(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
-        super().__init__()
-        self.alert_profile_name = alert_profile_name
-
-    @discord.ui.select(
-        placeholder = "Worst wind",
-        options = cdo.WIND_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
-        profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
-        try:
-            profile.load()
-        except FileNotFoundError:
-            await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
-            return
-        profile.add(cds.WeatherAttribute.WIND, float(select.values[0]))
-        profile.save()
-        await interaction.response.send_message("Successfully updated wind!")
-
-class UpdateHumidity(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
-        super().__init__()
-        self.alert_profile_name = alert_profile_name
-
-    @discord.ui.select(
-        placeholder = "Worst humidity",
-        options = cdo.HUMIDITY_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
-        profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
-        try:
-            profile.load()
-        except FileNotFoundError:
-            await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
-            return
-        profile.add(cds.WeatherAttribute.HUMIDITY, float(select.values[0]))
-        profile.save()
-        await interaction.response.send_message("Successfully updated humidity!")
-
-class UpdateTemperature(discord.ui.View):
-    def __init__(self, alert_profile_name: str):
-        super().__init__()
-        self.alert_profile_name = alert_profile_name
-
-    @discord.ui.select(
-        placeholder = "Temperature Min and Max",
-        min_values=2,
-        max_values=2,
-        options = cdo.TEMPERATURE_OPTIONS
-    )
-    async def select_callback(self, interaction, select):
-        profile = cds.AlertProfile(interaction.user.id, self.alert_profile_name)
-        try:
-            profile.load()
-        except FileNotFoundError:
-            await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
-            return
-        temps = [float(x) for x in select.values]
-        profile.add(cds.WeatherAttribute.TEMPERATURE, (min(temps), max(temps)))
-        profile.save()
-        await interaction.response.send_message("Successfully updated temperature!")
+        await interaction.response.send_message("Successfully updated!")
 
 class UpdateSelectAttribute(discord.ui.View):
     def __init__(self, alert_profile_name: str):
@@ -219,24 +99,7 @@ class UpdateSelectAttribute(discord.ui.View):
         options = cdo.ATTRIBUTE_OPTIONS
     )
     async def select_callback(self, interaction, select):
-        if select.values[0] == str(cds.WeatherAttribute.CLOUD_COVER.value):
-            await interaction.response.send_message("Update cloud cover...", view=UpdateCloudCover(self.alert_profile_name))
-        elif select.values[0] == str(cds.WeatherAttribute.TRANSPARENCY.value):
-            await interaction.response.send_message("Update transparency...", view=UpdateTransparency(self.alert_profile_name))
-        elif select.values[0] == str(cds.WeatherAttribute.SEEING.value):
-            await interaction.response.send_message("Update seeing...", view=UpdateSeeing(self.alert_profile_name))
-        elif select.values[0] == str(cds.WeatherAttribute.DARKNESS.value):
-            await interaction.response.send_message("Update darkness...", view=UpdateDarkness(self.alert_profile_name))
-        elif select.values[0] == str(cds.WeatherAttribute.SMOKE.value):
-            await interaction.response.send_message("Update smoke...", view=UpdateSmoke(self.alert_profile_name))
-        elif select.values[0] == str(cds.WeatherAttribute.WIND.value):
-            await interaction.response.send_message("Update wind...", view=UpdateWind(self.alert_profile_name))
-        elif select.values[0] == str(cds.WeatherAttribute.HUMIDITY.value):
-            await interaction.response.send_message("Update humidity...", view=UpdateHumidity(self.alert_profile_name))
-        elif select.values[0] == str(cds.WeatherAttribute.TEMPERATURE.value):
-            await interaction.response.send_message("Update temperature...", view=UpdateTemperature(self.alert_profile_name))
-        else:
-            await interaction.response.send_message("Invalid option selected!")
+        await interaction.response.send_message("Update...", view=UpdateAttribute(self.alert_profile_name, select.values[0]))
 
 @tree.command(name = "update_alert", description = "Update an alert profile")
 @discord.app_commands.describe(alert_profile_name='alert profile name')
