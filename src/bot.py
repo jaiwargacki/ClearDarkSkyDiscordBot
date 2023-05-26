@@ -82,7 +82,7 @@ class UpdateAttribute(discord.ui.View):
         elif self.attribute == cds.WeatherAttribute.TRANSPARENCY:
             profile.add(cds.WeatherAttribute.TRANSPARENCY, cds.Transparency.getAttributeFromText(interaction.data['values'][0]))
         elif self.attribute in [cds.WeatherAttribute.SEEING, cds.WeatherAttribute.DARKNESS, cds.WeatherAttribute.SMOKE, cds.WeatherAttribute.WIND, cds.WeatherAttribute.HUMIDITY]:
-            profile.add(cds.WeatherAttribute.SEEING, float(interaction.data['values'][0]))
+            profile.add(self.attribute, float(interaction.data['values'][0]))
         elif self.attribute == cds.WeatherAttribute.TEMPERATURE:
             temps = [float(x) for x in interaction.data['values']]
             profile.add(cds.WeatherAttribute.TEMPERATURE, (min(temps), max(temps)))
@@ -144,13 +144,37 @@ async def _listAlertProfile(interaction):
 @tree.command(name = "check_alert", description = "Check all alert profiles")
 @discord.app_commands.describe(alert_profile_name='alert profile name')
 async def _checkAlertProfile(interaction, alert_profile_name: str):
-    # TODO - Check alert profile
-    await interaction.response.send_message("Check alert profile is not yet implemented!")
-
-@tree.command(name = "check_all_alerts", description = "Check all alert profiles")
-async def _checkAllAlertProfiles(interaction):
-    # TODO - Check all alert profiles
-    await interaction.response.send_message("Check all alert profiles not yet implemented!")
+    await interaction.response.defer()
+    profile = cds.AlertProfile(interaction.user.id, alert_profile_name)
+    try:
+        profile.load()
+    except FileNotFoundError:
+        await interaction.followup.send(f"Alert profile {alert_profile_name} does not exist!")
+        return
+    location = profile.get(cds.AlertProfile.LOCATION)
+    weatherData = cds_web.extractWeatherData(location)
+    if weatherData is None:
+        await interaction.followup.send(f"Failed to get weather data for {location}!")
+        return
+    response = f"For {location}..."
+    result = profile.checkForAlert(weatherData)
+    if len(result) == 0:
+        response += "\nNo alerts!"
+    else:
+        response += "\nConditions met from "
+        for i in range(len(result)):
+            alert = result[i]
+            if i > 0 and (i != len(result) - 1 or len(result) > 2):
+                response += ", "
+            elif i > 0:
+                response += " and "
+            time1 = alert[0]
+            time2 = alert[1]
+            if time1.day == time2.day:
+                response += f"{time1.strftime('%B %d, %H:%M')} to {time2.strftime('%H:%M')}"
+            else:
+                response += f"{time1.strftime('%B %d, %H:%M')} to {time2.strftime('%B %d, %H:%M')}"
+    await interaction.followup.send(response)
 
 
 def main():
