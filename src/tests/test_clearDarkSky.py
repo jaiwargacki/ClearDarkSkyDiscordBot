@@ -47,7 +47,7 @@ class TestAlertProfile:
         alertProfile = clearDarkSky.AlertProfile('user', 'name of profile', 'location')
         alertProfile.add(clearDarkSky.WeatherAttribute.CLOUD_COVER, 10)
         alertProfile.add(clearDarkSky.WeatherAttribute.TRANSPARENCY, clearDarkSky.Transparency.POOR)
-        assert repr(alertProfile) == 'name of profile by user\nLOCATION: location\nDURATION: 0\nWeatherAttribute.CLOUD_COVER: 10\nWeatherAttribute.TRANSPARENCY: Transparency.POOR\n'
+        assert repr(alertProfile) == 'Alert profile name of profile for location.\n\nCurrent alert profile:\nCLOUD_COVER: 10\nTRANSPARENCY: Transparency.POOR\nConditions must occur for at least 0 hour(s).'
 
     def test_AlertProfile_Duration(self):
         alertProfile = clearDarkSky.AlertProfile('user', 'name of profile')

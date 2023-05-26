@@ -1,6 +1,51 @@
 import discord
 import clearDarkSkyEnums as cde
 
+# Values to text
+SEEING_TO_TEXT = {
+    1.0: 'Excellent',
+    0.8: 'Good',
+    0.6: 'Average',
+    0.4: 'Poor',
+    0.2: 'Terrible',
+    0.0: 'Too cloudy to forecast'
+}
+
+def getWindValueRange(value):
+    if value < 5:
+        return '0 to 5 mph'
+    elif value < 11:
+        return '6 to 11 mph'
+    elif value < 16:
+        return '12 to 16 mph'
+    elif value < 28:
+        return '17 to 28 mph'
+    elif value < 45:
+        return '29 to 45 mph'
+    return '>45 mph'
+
+def getHumidityValueRange(value):
+    if value < 25:
+        '<25%'
+    for i in range(25, 100, 5):
+        if value < i:
+            return f'{i-5}% to {i}%'
+    return '95% to 100%'
+
+def getTemperatureValueRangeRange(value):
+    return f'From ({getTemperatureValueRange(value[0])}) to ({getTemperatureValueRange(value[1])})'
+
+def getTemperatureValueRange(value):
+    if value < -40:
+        return '< -40F'
+    mins = [-40, -30, -21, -12, -3, 5, 14, 23, 32, 41, 50, 59, 68, 77, 86, 95, 104, 113]
+    for i in range(1, len(mins) + 1):
+        if value < i:
+            return f'{mins[i-1]}F to {mins[i]}F'
+    return '>113F'
+
+
+# Discord Lists
 ATTRIBUTE_OPTIONS = [
     discord.SelectOption(label='Cloud Cover', value=cde.WeatherAttribute.CLOUD_COVER.value),
     discord.SelectOption(label='Transparency', value=cde.WeatherAttribute.TRANSPARENCY.value),

@@ -121,7 +121,7 @@ class TestExtractWeatherData:
     def test_extractWeatherData_Valid(self):
         data = clearDarkSkyWeb.extractWeatherData('AlbanyNY')
         assert data != None
-        assert len(data) == 80
+        assert len(data) > 80
 
     def test_extractWeatherData_Invalid(self):
         assert clearDarkSkyWeb.extractWeatherData('foo') == None

@@ -9,6 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from clearDarkSkyEnums import *
+from clearDarkSkyOptions import SEEING_TO_TEXT, getWindValueRange, getHumidityValueRange, getTemperatureValueRangeRange
 
 
 class PointInTime:
@@ -86,9 +87,27 @@ class AlertProfile:
 
     def __repr__(self):
         """ Return a string representation of the alert profile. """
-        response = f'{self.name} by {self.username}\n'
-        for attribute in self.__attributes:
-            response += f'{attribute}: {self.__attributes[attribute]}\n'
+        response = f"Alert profile {self.name} for {self.get(AlertProfile.LOCATION)}."
+        response += f"\n\nCurrent alert profile:"
+        noConditions = True
+        for attribute in WeatherAttribute:
+            if self.get(attribute) is not None:
+                if attribute == WeatherAttribute.SEEING:
+                    response += f"\n{attribute.name}: {SEEING_TO_TEXT[self.get(attribute)]}"
+                elif attribute == WeatherAttribute.WIND:
+                    response += f"\n{attribute.name}: {getWindValueRange(self.get(attribute))}"
+                elif attribute == WeatherAttribute.HUMIDITY:
+                    response += f"\n{attribute.name}: {getHumidityValueRange(self.get(attribute))}"
+                elif attribute == WeatherAttribute.TEMPERATURE:
+                    response += f"\n{attribute.name}: {getTemperatureValueRangeRange(self.get(attribute))}"
+                else:
+                    response += f"\n{attribute.name}: {self.get(attribute)}"
+                if attribute == WeatherAttribute.SMOKE:
+                    response += f" ug/m^3"
+            noConditions = False
+        if noConditions:
+            response += "\nNo conditions set."
+        response += f"\nConditions must occur for at least {self.get(AlertProfile.DURATION)} hour(s)."
         return response
 
     def setDuration(self, duration):

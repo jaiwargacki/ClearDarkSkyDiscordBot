@@ -247,16 +247,8 @@ async def _updateAlertProfile(interaction, alert_profile_name: str):
     except FileNotFoundError:
         await interaction.response.send_message(f"Alert profile {alert_profile_name} does not exist!")
         return
-    response = f"Updating alert profile {alert_profile_name} for {profile.get(cds.AlertProfile.LOCATION)}."
-    response += f"\n\nCurrent alert profile:"
-    noConditions = True
-    for attribute in cds.WeatherAttribute:
-        if profile.get(attribute) is not None:
-            response += f"\n{attribute.name}: {profile.get(attribute)}"
-            noConditions = False
-    if noConditions:
-        response += "\nNo conditions set."
-    response += f"\nConditions must occur for at least {profile.get(cds.AlertProfile.DURATION)} hour(s)."
+    response = f"Updating alert profile..."
+    response += f"\n\nCurrent alert profile:{repr(profile)}"
     response += "\n\nSelect an attribute to update."
     await interaction.response.send_message(response, view=UpdateSelectAttribute(alert_profile_name))
     
