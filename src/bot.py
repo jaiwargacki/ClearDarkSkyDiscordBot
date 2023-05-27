@@ -3,9 +3,12 @@ import os
 import discord
 from dotenv import load_dotenv
 
-import clearDarkSky as cds
+import clearDarkSkyModel as cds
 import clearDarkSkyWeb as cds_web
-import clearDarkSkyOptions as cdo
+
+from clearDarkSkyConstants import *
+
+# Bot Setup
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -16,57 +19,22 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(client)
 
-
-# Set up bot
 @client.event
 async def on_ready():
     await tree.sync()
     print(f'{client.user} has connected to Discord!')
 
 
-# Create Alert Profile
-@tree.command(name = "create_alert", description = "Create an alert profile")
-@discord.app_commands.describe(location='location name (example: AlbanyNY)')
-@discord.app_commands.describe(alert_profile_name='alert profile name')
-@discord.app_commands.describe(duration='min duration in hours')
-async def _createAlertProfile(interaction, location: str, alert_profile_name: str, duration: int):
-    # Validate location
-    if not cds_web.validateLocationKey(location):
-        await interaction.response.send_message("Invalid location! (examples: AlbanyNY, BttlRvr0AB, NrthCpPE, etc)\n \
-            Find you location key from the url of your location and try again.")
-        return
+# Classes
 
-    profile = cds.AlertProfile(interaction.user.id, alert_profile_name, location)
-    profile.setDuration(duration)
-    profile.save()
-
-    response = f"Successfully created alert profile {alert_profile_name} for {location}!"
-    response += f"\nUse the `update_alert` command to set alert profile attributes."
-    await interaction.response.send_message(response)
-
-
-# Update Alert Profile
 class UpdateAttribute(discord.ui.View):
     def __init__(self, alert_profile_name: str, attributeKey: str):
         super().__init__()
         self.alert_profile_name = alert_profile_name
-        self.attribute = cds.WeatherAttribute(int(attributeKey))
-        if self.attribute == cds.WeatherAttribute.CLOUD_COVER:
-            select = discord.ui.Select(placeholder = "Maximum cloud cover", options = cdo.CLOUD_COVER_OPTIONS)
-        elif self.attribute == cds.WeatherAttribute.TRANSPARENCY:
-            select = discord.ui.Select(placeholder = "Worst transparency", options = cdo.TRANSPARENCY_OPTIONS)
-        elif self.attribute == cds.WeatherAttribute.SEEING:
-            select = discord.ui.Select(placeholder = "Worst seeing", options = cdo.SEEING_OPTIONS)
-        elif self.attribute == cds.WeatherAttribute.DARKNESS:
-            select = discord.ui.Select(placeholder = "Brightest", options = cdo.DARKNESS_OPTIONS)
-        elif self.attribute == cds.WeatherAttribute.SMOKE:
-            select = discord.ui.Select(placeholder = "Worst smoke", options = cdo.SMOKE_OPTIONS)
-        elif self.attribute == cds.WeatherAttribute.WIND:
-            select = discord.ui.Select(placeholder = "Worst wind", options = cdo.WIND_OPTIONS)
-        elif self.attribute == cds.WeatherAttribute.HUMIDITY:
-            select = discord.ui.Select(placeholder = "Worst humidity", options = cdo.HUMIDITY_OPTIONS)
-        elif self.attribute == cds.WeatherAttribute.TEMPERATURE:
-            select = discord.ui.Select(placeholder = "Temperature Min and Max", options = cdo.TEMPERATURE_OPTIONS)
+        self.attribute = WeatherAttribute(int(attributeKey))
+        lookup = OPTIONS_LOOKUP[self.attribute]
+        select = discord.ui.Select(placeholder = lookup[0], options = lookup[1], \
+            min_values=lookup[2], max_values=lookup[3])
         select.callback = self.callback
         self.add_item(select)
 
@@ -77,15 +45,15 @@ class UpdateAttribute(discord.ui.View):
         except FileNotFoundError:
             await interaction.response.send_message(f"Alert profile {self.alert_profile_name} does not exist!")
             return
-        if self.attribute == cds.WeatherAttribute.CLOUD_COVER:
-            profile.add(cds.WeatherAttribute.CLOUD_COVER, int(interaction.data['values'][0]))
-        elif self.attribute == cds.WeatherAttribute.TRANSPARENCY:
-            profile.add(cds.WeatherAttribute.TRANSPARENCY, cds.Transparency.getAttributeFromText(interaction.data['values'][0]))
-        elif self.attribute in [cds.WeatherAttribute.SEEING, cds.WeatherAttribute.DARKNESS, cds.WeatherAttribute.SMOKE, cds.WeatherAttribute.WIND, cds.WeatherAttribute.HUMIDITY]:
+        if self.attribute == WeatherAttribute.CLOUD_COVER:
+            profile.add(WeatherAttribute.CLOUD_COVER, int(interaction.data['values'][0]))
+        elif self.attribute == WeatherAttribute.TRANSPARENCY:
+            profile.add(WeatherAttribute.TRANSPARENCY, Transparency(int(interaction.data['values'][0])))
+        elif self.attribute in [WeatherAttribute.SEEING, WeatherAttribute.DARKNESS, WeatherAttribute.SMOKE, WeatherAttribute.WIND, WeatherAttribute.HUMIDITY]:
             profile.add(self.attribute, float(interaction.data['values'][0]))
-        elif self.attribute == cds.WeatherAttribute.TEMPERATURE:
+        elif self.attribute == WeatherAttribute.TEMPERATURE:
             temps = [float(x) for x in interaction.data['values']]
-            profile.add(cds.WeatherAttribute.TEMPERATURE, (min(temps), max(temps)))
+            profile.add(WeatherAttribute.TEMPERATURE, (min(temps), max(temps)))
         profile.save()
         await interaction.response.send_message("Successfully updated!")
 
@@ -96,10 +64,33 @@ class UpdateSelectAttribute(discord.ui.View):
 
     @discord.ui.select(
         placeholder = "Select an attribute to update",
-        options = cdo.ATTRIBUTE_OPTIONS
+        options = ATTRIBUTE_OPTIONS
     )
     async def select_callback(self, interaction, select):
         await interaction.response.send_message("Update...", view=UpdateAttribute(self.alert_profile_name, select.values[0]))
+
+
+# Commands
+
+@tree.command(name = "create_alert", description = "Create an alert profile")
+@discord.app_commands.describe(location='location name (example: AlbanyNY)')
+@discord.app_commands.describe(alert_profile_name='alert profile name')
+@discord.app_commands.describe(duration='min duration in hours')
+async def _createAlertProfile(interaction, location: str, alert_profile_name: str, duration: int):
+    await interaction.response.defer()
+    if not cds_web.validateLocationKey(location):
+        await interaction.followup.send("Invalid location! (examples: AlbanyNY, BttlRvr0AB, NrthCpPE, etc)\n \
+            Find you location key from the url of your location and try again.")
+        return
+
+    profile = cds.AlertProfile(interaction.user.id, alert_profile_name, location)
+    profile.setDuration(duration)
+    profile.save()
+
+    response = f"Successfully created alert profile {alert_profile_name} for {location}!"
+    response += f"\nUse the `update_alert` command to set alert profile attributes."
+    await interaction.followup.send(response)
+
 
 @tree.command(name = "update_alert", description = "Update an alert profile")
 @discord.app_commands.describe(alert_profile_name='alert profile name')
@@ -116,7 +107,6 @@ async def _updateAlertProfile(interaction, alert_profile_name: str):
     await interaction.response.send_message(response, view=UpdateSelectAttribute(alert_profile_name))
     
 
-# Delete Alert Profile
 @tree.command(name = "delete_alert", description = "Delete an alert profile")
 @discord.app_commands.describe(alert_profile_name='alert profile name')
 async def _deleteAlertProfile(interaction, alert_profile_name: str):
@@ -127,7 +117,6 @@ async def _deleteAlertProfile(interaction, alert_profile_name: str):
         await interaction.response.send_message(f"Failed to delete alert profile {alert_profile_name}!")
 
 
-# List Alert Profiles
 @tree.command(name = "list_alerts", description = "List all of your alert profiles")
 async def _listAlertProfile(interaction):
     profiles = cds.AlertProfile.getAll(interaction.user.id)
@@ -140,7 +129,6 @@ async def _listAlertProfile(interaction):
     await interaction.response.send_message(response)
 
 
-# Check Alert Profile(s)
 @tree.command(name = "check_alert", description = "Check all alert profiles")
 @discord.app_commands.describe(alert_profile_name='alert profile name')
 async def _checkAlertProfile(interaction, alert_profile_name: str):
@@ -179,6 +167,7 @@ async def _checkAlertProfile(interaction, alert_profile_name: str):
 
 def main():
     client.run(TOKEN)
+
 
 if __name__ == '__main__':
     main()

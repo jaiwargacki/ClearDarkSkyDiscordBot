@@ -1,31 +1,29 @@
-import pytest
-
-import clearDarkSkyEnums
+from clearDarkSkyEnums import Transparency
 
 class TestTransparency:
     def test_getAttributeFromText_Transparent(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('Transparent') == clearDarkSkyEnums.Transparency.TRANSPARENT
+        assert Transparency.getAttributeFromText('Transparent') == Transparency.TRANSPARENT
 
     def test_getAttributeFromText_AboveAverage(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('Above Average') == clearDarkSkyEnums.Transparency.ABOVE_AVERAGE
+        assert Transparency.getAttributeFromText('Above Average') == Transparency.ABOVE_AVERAGE
 
     def test_getAttributeFromText_Average(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('Average') == clearDarkSkyEnums.Transparency.AVERAGE
+        assert Transparency.getAttributeFromText('Average') == Transparency.AVERAGE
 
     def test_getAttributeFromText_BelowAverage(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('Below Average') == clearDarkSkyEnums.Transparency.BELOW_AVERAGE
+        assert Transparency.getAttributeFromText('Below Average') == Transparency.BELOW_AVERAGE
 
     def test_getAttributeFromText_Poor(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('Poor') == clearDarkSkyEnums.Transparency.POOR
+        assert Transparency.getAttributeFromText('Poor') == Transparency.POOR
 
     def test_getAttributeFromText_TooCloudy(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('Too Cloudy') == clearDarkSkyEnums.Transparency.TOO_CLOUDY
+        assert Transparency.getAttributeFromText('Too Cloudy') == Transparency.TOO_CLOUDY_TO_FORECAST
 
     def test_getAttributeFromText_Invalid(self):
-        assert clearDarkSkyEnums.Transparency.getAttributeFromText('foo') == clearDarkSkyEnums.Transparency.TOO_CLOUDY
+        assert Transparency.getAttributeFromText('foo') == Transparency.TOO_CLOUDY_TO_FORECAST
 
     def test_confirmRanking(self):
-        assert clearDarkSkyEnums.Transparency.TRANSPARENT.value < clearDarkSkyEnums.Transparency.ABOVE_AVERAGE.value
-        assert clearDarkSkyEnums.Transparency.ABOVE_AVERAGE.value < clearDarkSkyEnums.Transparency.AVERAGE.value
-        assert clearDarkSkyEnums.Transparency.AVERAGE.value < clearDarkSkyEnums.Transparency.BELOW_AVERAGE.value
-        assert clearDarkSkyEnums.Transparency.BELOW_AVERAGE.value < clearDarkSkyEnums.Transparency.POOR.value
+        assert Transparency.TRANSPARENT.value < Transparency.ABOVE_AVERAGE.value
+        assert Transparency.ABOVE_AVERAGE.value < Transparency.AVERAGE.value
+        assert Transparency.AVERAGE.value < Transparency.BELOW_AVERAGE.value
+        assert Transparency.BELOW_AVERAGE.value < Transparency.POOR.value

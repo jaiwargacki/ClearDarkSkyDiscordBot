@@ -20,7 +20,7 @@ class Transparency(Enum):
     AVERAGE = 2
     BELOW_AVERAGE = 3
     POOR = 4
-    TOO_CLOUDY = 5
+    TOO_CLOUDY_TO_FORECAST = 5
 
     @staticmethod
     def getAttributeFromText(text):
@@ -34,4 +34,4 @@ class Transparency(Enum):
             return Transparency.AVERAGE
         elif 'Poor' in text:
             return Transparency.POOR
-        return Transparency.TOO_CLOUDY
+        return Transparency.TOO_CLOUDY_TO_FORECAST
