@@ -1,7 +1,11 @@
 import os
 
 import discord
+from discord.ext import tasks as discordTasks
 from dotenv import load_dotenv
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 import clearDarkSkyModel as cds
 import clearDarkSkyWeb as cds_web
@@ -23,6 +27,10 @@ tree = discord.app_commands.CommandTree(client)
 async def on_ready():
     await tree.sync()
     print(f'{client.user} has connected to Discord!')
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(checkAlerts, CronTrigger(hour=7, minute=0, second=0))
+    scheduler.start()
 
 
 # Classes
@@ -119,7 +127,7 @@ async def _deleteAlertProfile(interaction, alert_profile_name: str):
 
 @tree.command(name = "list_alerts", description = "List all of your alert profiles")
 async def _listAlertProfile(interaction):
-    profiles = cds.AlertProfile.getAll(interaction.user.id)
+    profiles = cds.AlertProfile.getAllForUser(interaction.user.id)
     if len(profiles) == 0:
         await interaction.response.send_message("You have no alert profiles!")
         return
@@ -163,6 +171,38 @@ async def _checkAlertProfile(interaction, alert_profile_name: str):
             else:
                 response += f"{time1.strftime('%B %d, %H:%M')} to {time2.strftime('%B %d, %H:%M')}"
     await interaction.followup.send(response)
+
+
+async def checkAlerts():
+    print("Checking alerts...")
+    for profile in cds.AlertProfile.getAll():
+        profile.load()
+        location = profile.get(cds.AlertProfile.LOCATION)
+        weatherData = cds_web.extractWeatherData(location)
+        print(f"Checking {location}...")
+        if weatherData is None:
+            continue
+        result = profile.checkForAlert(weatherData)
+        if len(result) == 0:
+            continue
+        response = f"For {location}..."
+        response += "\nConditions met from "
+        for i in range(len(result)):
+            alert = result[i]
+            if i > 0 and (i != len(result) - 1 or len(result) > 2):
+                response += ", "
+            elif i > 0:
+                response += " and "
+            time1 = alert[0]
+            time2 = alert[1]
+            if time1.day == time2.day:
+                response += f"{time1.strftime('%B %d, %H:%M')} to {time2.strftime('%H:%M')}"
+            else:
+                response += f"{time1.strftime('%B %d, %H:%M')} to {time2.strftime('%B %d, %H:%M')}"
+        userId = profile.username
+        print(f"Sending alert to {userId}...")
+        user = await client.fetch_user(userId)
+        await user.send(response)
 
 
 def main():

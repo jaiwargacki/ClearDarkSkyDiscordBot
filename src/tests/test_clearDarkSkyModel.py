@@ -240,14 +240,14 @@ class TestAlertProfile:
         except:
             assert True
 
-    def test_AlertProfile_GetAll_None(self):
-        assert AlertProfile.getAll('user_none') == []
+    def test_AlertProfile_GetAllForUser_None(self):
+        assert AlertProfile.getAllForUser('user_none') == []
 
-    def test_AlertProfile_GetAll(self):
+    def test_AlertProfile_GetAllForUser(self):
         alertProfile = AlertProfile('userAll', 'profile 1')
         alertProfile.save()
         alertProfile = AlertProfile('userAll', 'profile 2')
         alertProfile.save()
-        assert len(AlertProfile.getAll('userAll')) == 2
+        assert len(AlertProfile.getAllForUser('userAll')) == 2
         os.remove('AlertProfiles/userAll-profile 1.json')
         os.remove('AlertProfiles/userAll-profile 2.json')

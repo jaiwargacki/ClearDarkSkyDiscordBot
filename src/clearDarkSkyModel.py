@@ -316,7 +316,7 @@ class AlertProfile:
                 self.add(WeatherAttribute.TRANSPARENCY, Transparency(transparency))
 
     @staticmethod
-    def getAll(username):    
+    def getAllForUser(username):    
         """ Get all alert profiles for a user.
         Parameters:
             username (string): The username of the user.
@@ -330,4 +330,20 @@ class AlertProfile:
                 profile = AlertProfile(username, filename.split('-')[1].split('.')[0])
                 profile.load()
                 profiles.append(profile)
+        return profiles
+
+    @staticmethod
+    def getAll():    
+        """ Get all alert profiles.
+        Returns:
+            list: A list of AlertProfile objects.
+        """
+        profiles = []
+        for filename in os.listdir(AlertProfile.DIRECTORY):
+            try: 
+                profile = AlertProfile(filename.split('-')[0], filename.split('-')[1].split('.')[0])
+                profile.load()
+                profiles.append(profile)
+            except:
+                pass
         return profiles
