@@ -11,9 +11,7 @@ to the user if the forecast meets the user's criteria.
 
 ### Getting access to the bot
 
-Join this server to get access to the bot: https://discord.gg/8EVZpMDaND
-
-Once you have access to the bot, you can dm the bot to get started.
+Awaiting premission from site owner to post access to the bot publically. 
 
 ### Commands
 
