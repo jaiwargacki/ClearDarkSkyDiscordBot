@@ -7,11 +7,20 @@ on [Clear Dark Sky](https://www.cleardarksky.com/csk/). The bot will then
 periodically check the weather forecast for the location and send a message
 to the user if the forecast meets the user's criteria.
 
+Special thanks to Attilla Danko for creating Clear Dark Sky and allowing me to
+use the data from the site. If you want to run this bot yourself, please 
+reach out to him first. This repository requires env variables that are not
+included in the repository, and will not work without information and approval
+from Attilla.
+
+That being said, if you want to use the bot (which I host), you can! See below.
+
 ## Usage
 
 ### Getting access to the bot
 
-Awaiting premission from site owner to post access to the bot publically. 
+Join this server to get access to the bot: https://discord.gg/8EVZpMDaND
+Once you have access to the bot, you can dm the bot to get started.
 
 ### Commands
 

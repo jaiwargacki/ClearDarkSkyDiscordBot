@@ -2,7 +2,7 @@ name: Python application
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "*" ]
   pull_request:
     branches: [ "main" ]
 
@@ -34,3 +34,7 @@ jobs:
     - name: Test with pytest
       run: |
         PYTHONPATH=src pytest
+      env:
+        FORECAST_DATA: ${{ secrets.FORECAST_DATA }}
+        SCALE_DATA: ${{ secrets.SCALE_DATA }}
+        LOCATION_DATA: ${{ secrets.LOCATION_DATA }}

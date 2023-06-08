@@ -3,13 +3,20 @@ import datetime
 import time
 import math
 import json
+import os
 
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
 from clearDarkSkyConstants import *
 import clearDarkSkyHelpers as helpers
 from clearDarkSkyModel import AlertProfile, PointInTime
+
+load_dotenv()
+FORECAST_DATA = os.getenv('FORECAST_DATA')
+SCALE_DATA = os.getenv('SCALE_DATA')
+LOCATION_DATA = os.getenv('LOCATION_DATA')
 
 
 def validateLocationKey(location):
@@ -19,16 +26,11 @@ def validateLocationKey(location):
     Returns:
         bool: True if the location key is valid, False otherwise.
     """
-    url = BASE_URL % location
-    attemps = 0
-    while True:
-        page = requests.get(url)
-        if page.status_code == 200:
+    locations = requests.get(LOCATION_DATA)
+    for loc in locations.text.split('\n'):
+        if location == loc.split('|')[0].strip():
             return True
-        elif attemps == REQUEST_RETRY_COUNT:
-            return False
-        attemps += 1
-        time.sleep(REQUEST_RETRY_DELAY)
+    return False
 
 
 def extractDate(soup):
